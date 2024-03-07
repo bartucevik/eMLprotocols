@@ -1,0 +1,208 @@
+---
+title: "Sequential Neural Network Modeling Protocol"
+author: "Turtles"
+date: 3/07/2024
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+
+# Introduction
+(Cris)
+Multiple inputs =>  predict single output 
+
+Relationships between the variables and the output is probably nonlinear, and also not continuous (Physics) 
+
+What are some guidelines, rules that result in an accurate model 
+
+ 
+# Data model description
+ 
+
+Tensorflow.keras.models  import Sequential 
+
+
+# Model parameters
+
+## Layers
+
+    Dense layers (Bartu)
+
+## Activation
+
+Activation = LeakyRELU(0.04) (Zhidong) 
+
+The final layer in your NN has activation = "linear" 
+
+## Kernel
+(Charlie)
+Kernel_regularizers = L!(0.005) 
+
+Number of dense layers 
+
+## Dropout
+
+(Arin)
+Dropout (XX) - designed to prevent overfitting, randomly drop out a proportion of neurons 
+
+
+
+# Model compilation
+ 
+Model.compile 
+
+## Optimizers
+
+Optimizer karas.optimizers.legacy (learning rate!) 
+
+Loss "mean_squared_error", or "abs error" 
+
+## Metrics
+
+## Epochs
+
+## Batch size
+
+## Validation data
+
+Validation_data (training data), tuning hyperparameters 
+
+# Example
+
+```{{python}}
+
+import pandas as pd
+import tensorflow as tf
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.preprocessing import RobustScaler
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, LeakyReLU
+from keras.regularizers import L1
+from keras.callbacks import Callback, ModelCheckpoint
+from keras.optimizers.schedules import ExponentialDecay
+import keras
+from keras import backend as K
+
+class PrintLearningRate(Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        lr = self.model.optimizer.lr
+        if self.model.optimizer._decayed_lr:
+            lr = self.model.optimizer._decayed_lr(tf.float32).numpy()
+        print(f"Learning rate for epoch {epoch + 1} is {lr}")
+
+def apply_noise_reduction(data, window_size=3):
+    return data.rolling(window=window_size, min_periods=1).mean()
+
+dfmain = pd.read_csv("../merged.csv")
+dfmain = dfmain.drop(columns=["Unnamed: 0"], axis=1)
+#dfmain = dfmain.sample(frac=0.5)
+dfmain["Corr1"] = dfmain["A"] * dfmain["fy"]
+dfmain["Corr2"] = dfmain["I"] * dfmain["fy"]
+scaler = RobustScaler()
+y = dfmain["Pn"]
+x = dfmain.drop(columns=["Pn"], axis=1)
+x = x.drop(columns=["section"], axis=1)
+x_tr = x.iloc[:850000].values
+x_te = x.iloc[-100000:].values
+y_tr = y.iloc[:850000].values
+y_te = y.iloc[-100000:].values
+x_val = x.iloc[850000:-100000]
+y_val = y.iloc[850000:-100000].values
+batchsize = 48
+
+epochsno = 200
+x_tr = scaler.fit_transform(x_tr)
+x_te = scaler.transform(x_te)
+x_val = scaler.transform(x_val)
+learning_ratei = 0.0012
+learning_ratef = 0.0004
+
+# depict the layer structure
+
+decaysteps = round(900000 / batchsize)
+print("decaysteps",decaysteps)
+targetlr = 0.0004
+initiallr = 0.0015
+decayrate = round((targetlr/initiallr) ** (1/epochsno), 4)
+print(decayrate)
+lr_schedule = ExponentialDecay(
+    initial_learning_rate=initiallr,
+    decay_steps=decaysteps,
+    decay_rate=decayrate,
+    staircase=True)
+
+class RegressionEarlyStopping(Callback):
+    def __init__(self, monitor, percentage_delta, patience, verbose, mode):
+        super(RegressionEarlyStopping, self).__init__()
+        self.monitor = monitor
+        self.percentage_delta = percentage_delta
+        self.patience = patience
+        self.verbose = verbose
+        self.mode = mode
+        self.wait = 0
+        self.stopped_epoch = 0
+        self.best = None
+        self.best_weights = None
+
+    def on_epoch_end(self, epoch, logs=None):
+        current = logs.get(self.monitor)
+        if current is None:
+            return
+
+        improvement = 0
+        if self.best is not None:
+            if self.mode == 'min':
+                improvement = (self.best - current) / self.best
+            elif self.mode == 'max':
+                improvement = (current - self.best) / self.best
+
+        if self.best is None or \
+                (self.mode == 'min' and improvement > self.percentage_delta) or \
+                (self.mode == 'max' and improvement > self.percentage_delta):
+            self.best = current
+            self.wait = 0
+            self.best_weights = self.model.get_weights()
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                self.model.stop_training = True
+                self.model.set_weights(self.best_weights)
+                if self.verbose > 0:
+                    print(f"Epoch {epoch + 1}: early stopping based on {self.monitor}")
+
+    def on_train_end(self, logs=None):
+        if self.stopped_epoch > 0 and self.verbose > 0:
+            print(f"Restored model weights from the end of the best epoch: {self.stopped_epoch + 1}.")
+
+
+modelmse = []
+K.clear_session()
+model_checkpoint = ModelCheckpoint(filepath="fourth.csv",save_best_only=True, monitor='val_loss', mode='min', verbose=1)
+early_stopping2 = RegressionEarlyStopping(
+    monitor='val_loss',
+    percentage_delta=0,
+    patience=30,
+    verbose=1,
+    mode='min'
+)
+model = Sequential(name=f"final")
+moptimizerA = keras.optimizers.legacy.Adam(learning_rate=lr_schedule)
+for i in range(6, 0, -1):
+    model.add(Dense(10 * i , activation=LeakyReLU(0.04), kernel_regularizer=L1(0.005)))
+    if i % 2 == 0 and i != 0:
+        model.add(Dropout(round(0.12*(i/(i+1)))))
+    #if i // 3 == 0 and i != 0: model.add(Dropout(rate=0.1))
+model.add(Dense(1, activation="linear"))
+model.compile(optimizer=moptimizerA, loss="mean_squared_error", metrics=['mean_squared_error'])
+model.fit(x_tr, y_tr, epochs=epochsno, batch_size=batchsize, validation_data=[x_val, y_val], callbacks=[early_stopping2, PrintLearningRate(), model_checkpoint])
+predictions = model.predict(x_te)
+modelmse = mean_squared_error(y_te, predictions)
+modelmspe = mean_absolute_percentage_error(y_te, predictions) ** 2
+K.clear_session()
+print(modelmse)
+print(modelmspe)
+
+```
