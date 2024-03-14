@@ -10,13 +10,8 @@ jupyter: python3
 
 
 # Introduction
-(Cris)
-Multiple inputs =>  predict single output 
 
-Relationships between the variables and the output is probably nonlinear, and also not continuous (Physics) 
-
-What are some guidelines, rules that result in an accurate model 
-
+This document presents a protocol (e.g., set of guidelines) for building reliable predictive engineering models with sequential neural networks.   The protocol is specific to engineering because XXXX.
  
 # Data model description
  
