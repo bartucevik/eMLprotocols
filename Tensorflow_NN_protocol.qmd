@@ -26,10 +26,23 @@ Tensorflow.keras.models  import Sequential
     Dense layers (Bartu)
 
 ## Activation
+Activation function is a mathematical function that determines how the weighted sum of inputs is transformed into an output from a neuron, which plays a vital role in enabling neural networks to learn complex patterns in data.
+Nonlinearity can be introduced to neural networks through the activation function. For example, when the activation function is nonlinear, a two-layer neural network can be proven to be a universal function approximator.
+The suitable choice of activation function for a given task can be determined through experimentation and general experience.
+Common Activation Functions:
+o	Rectified Linear Unit (ReLU): The most widely used activation function. It returns the input value for positive inputs and zero for negative inputs (max(0, x), where x is the input). It helps overcome the vanishing gradient problem, and it’s widely used in hidden layers to introduce nonlinearity.
+o	Leaky ReLU: A modified ReLU that allows a small non-zero output for negative inputs, which is a gradual transition for negative inputs (for positive input values, it behaves like the ReLU function, returning input (x); for negative input values, it returns a small negative value proportional to the input (x), determined by the negative slope parameter). 
+Leaky ReLU is more stable than ReLU, especially when dealing with large gradients. In standard ReLU, neurons can become inactive (output zero) for negative inputs during training. Leaky ReLU addresses this by allowing a small non-zero output for negative inputs. The non-zero gradient for negative inputs helps prevent vanishing gradients during backpropagation.
+o	Sigmoid (Logistic): Maps input values to a range between 0 and 1 (defined as 1 / (1 + exp(-x))). Commonly used in binary classification problems.
+o	Tanh (Hyperbolic Tangent): Similar to sigmoid but maps inputs to a range between -1 and 1.
+o	Softmax: Converts a vector of values into a probability distribution. Elements of the output vector are in the range [0, 1] and sum to 1 (exp(x) / sum(exp(x)) for each vector element). Often used in the last layer of classification networks. Commonly used in multi-class classification problems.
+o	Linear: Simplest activation function. Maps input values as they are (f(x) = x). Commonly used in the output layer of a neural network, especially in regression tasks. 
 
-Activation = LeakyRELU(0.04) (Zhidong) 
+Szandała, T. (2021). Review and comparison of commonly used activation functions for deep neural networks. Bio-inspired neurocomputing, 203-224.
+Apicella, A., Donnarumma, F., Isgrò, F., & Prevete, R. (2021). A survey on modern trainable activation functions. Neural Networks, 138, 14-32.
+Dubey, S. R., Singh, S. K., & Chaudhuri, B. B. (2022). Activation functions in deep learning: A comprehensive survey and benchmark. Neurocomputing, 503, 92-108.
+Rasamoelina, A. D., Adjailia, F., & Sinčák, P. (2020, January). A review of activation function for artificial neural network. In 2020 IEEE 18th World Symposium on Applied Machine Intelligence and Informatics (SAMI) (pp. 281-286). IEEE.
 
-The final layer in your NN has activation = "linear" 
 
 ## Kernel
 (Charlie)
