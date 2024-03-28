@@ -24,6 +24,27 @@ Tensorflow.keras.models  import Sequential
 ## Layers
 
     Dense layers (Bartu)
+This medium link will explain the logical and mathematical background of dense layers very well.
+https://www.google.com/url?sa=i&url=https%3A%2F%2Fmedium.datadriveninvestor.com%2Fneural-network-simplified-c28b6614add4&psig=AOvVaw3vJtbw0bV02NURHOEBcK2L&ust=1711712237162000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCMitzZDvloUDFQAAAAAdAAAAABA9
+
+Computational Neural Networks aren't only about that, there is a whole different inside it.
+1. Connecting the number of dense layers and their widths with an equation using a for loop is very usable in many cases because in many cases it causes the final error rate to decrease. The systematic nature of equations make those kind of neural networks much more stable and well-organized. Which a basic example of this case will look something like this:
+  model = Sequential()
+  constant = # some constant number
+  for th_layer in range(number_of_layer+1, 1, -1):
+    model.add(th_layer * constant)
+  ...
+  and a basic hyperparameter optimization (such as random search) will look like this:
+  turns = different values for constant
+  for i in range(turns):
+    constant = random.randint(constant_min, constant_max) # you can check if it haven't been tried.
+    model = Sequential()
+    for th_layer in range(number_of_layer+1, 1, -1):
+      model.add(th_layer * constant)
+    ... save the error of models in order to understand the best model overall, this process is applicable several times( same trials for all constants) to ensure the best constant value.
+2. That equation doesn't have to be simple, in fact, it can be really complex or it can contain high-level mathematical operation (such as logarithms, exponentials, derivatives, or more). For example:
+  Width = base ** (total_layerno - .th_layer) # where the base can be a float (you have to round in that case).
+
 
 ## Activation
 Activation function is a mathematical function that determines how the weighted sum of inputs is transformed into an output from a neuron, which plays a vital role in enabling neural networks to learn complex patterns in data.
